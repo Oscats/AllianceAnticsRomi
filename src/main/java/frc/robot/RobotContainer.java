@@ -122,7 +122,7 @@ public class RobotContainer {
         config);
 
     RamseteCommand ramseteCommand = new RamseteCommand(
-        exampleTrajectory,
+        pathtraj(),
         m_drivetrain::getPose,
         new RamseteController(AutoConstants.kRamseteB, AutoConstants.kRamseteZeta),
         new SimpleMotorFeedforward(DriveConstants.ksVolts, DriveConstants.kvVoltSecondsPerMeter, DriveConstants.kaVoltSecondsSquaredPerMeter),
@@ -148,7 +148,7 @@ public class RobotContainer {
   } 
 
   private Trajectory pathtraj (){
-    String trajectoryJSON = "paths/Unnamed.wpilib.json";
+    String trajectoryJSON = "paths/test1.wpilib.json";
     Trajectory trajectory = new Trajectory();
 
     try {
