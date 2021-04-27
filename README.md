@@ -36,3 +36,5 @@ We have created a few handy convenience features that allow you to easily input 
     fish
     :)
     crab
+
+    PathWeaver Note: Put waypoint in middle of line if it turns too much.
