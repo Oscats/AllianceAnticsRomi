@@ -35,6 +35,6 @@ We have created a few handy convenience features that allow you to easily input 
     Hi
     fish
     :)
-    crab
+    crabs
 
     PathWeaver Note: Put waypoint in middle of line if it turns too much.
