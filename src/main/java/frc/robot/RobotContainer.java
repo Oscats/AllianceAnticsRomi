@@ -65,8 +65,7 @@ public class RobotContainer {
 
    private double[] defaultCoordinates = {0.0, 5.0};
    private double[] defaultPoseCoordinates = {0,0,180};
-   
- 
+  
    // NOTE: The I/O pin functionality of the 5 exposed I/O pins depends on the hardware "overlay"
    // that is specified when launching the wpilib-ws server on the Romi raspberry pi.
    // By default, the following are available (listed in order from inside of the board to outside):
@@ -156,6 +155,18 @@ public class RobotContainer {
       new PIDController(DriveConstants.kPDriveVel, 0, 0),
       m_drivetrain::tankDriveVolts,
       m_drivetrain); 
+
+    RamseteCommand ramseteCommand4 = new RamseteCommand(
+      pathtraj4(),
+      m_drivetrain::getPose,
+      new RamseteController(AutoConstants.kRamseteB, AutoConstants.kRamseteZeta),
+      new SimpleMotorFeedforward(DriveConstants.ksVolts, DriveConstants.kvVoltSecondsPerMeter, DriveConstants.kaVoltSecondsSquaredPerMeter),
+      DriveConstants.kDriveKinematics,
+      m_drivetrain::getWheelSpeeds,
+      new PIDController(DriveConstants.kPDriveVel, 0, 0),
+      new PIDController(DriveConstants.kPDriveVel, 0, 0),
+      m_drivetrain::tankDriveVolts,
+      m_drivetrain); 
     //m_drivetrain.resetOdometry(exampleTrajectory.getInitialPose());
     m_drivetrain.resetOdometry(exampleTrajectory.getInitialPose());
 
@@ -169,6 +180,8 @@ public class RobotContainer {
         .andThen(ramseteCommand2)
         .andThen(new InstantCommand(() -> m_drivetrain.tankDriveVolts(0, 0), m_drivetrain))
         .andThen(ramseteCommand3)
+        .andThen(new InstantCommand(() -> m_drivetrain.tankDriveVolts(0, 0), m_drivetrain))
+        .andThen(ramseteCommand4)
 
         // Finally, we make sure that the robot stops
         .andThen(new InstantCommand(() -> m_drivetrain.tankDriveVolts(0, 0), m_drivetrain));
@@ -203,6 +216,19 @@ public class RobotContainer {
   }
   private Trajectory pathtraj3(){
     String trajectoryJSON = "paths/test3.wpilib.json";
+    Trajectory trajectory = new Trajectory();
+
+    try {
+      Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
+      trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+   } catch (IOException ex) {
+      new PrintCommand("Unable to open trajectory: " ); //+ trajectoryJSON, ex.getStackTrace()
+   }
+   return trajectory;
+    
+  }
+  private Trajectory pathtraj4(){
+    String trajectoryJSON = "paths/test4.wpilib.json";
     Trajectory trajectory = new Trajectory();
 
     try {
