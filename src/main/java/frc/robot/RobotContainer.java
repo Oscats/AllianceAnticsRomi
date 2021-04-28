@@ -132,7 +132,18 @@ public class RobotContainer {
         new PIDController(DriveConstants.kPDriveVel, 0, 0),
         m_drivetrain::tankDriveVolts,
         m_drivetrain);
-
+    
+    RamseteCommand ramseteCommand2 = new RamseteCommand(
+      pathtraj2(),
+      m_drivetrain::getPose,
+      new RamseteController(AutoConstants.kRamseteB, AutoConstants.kRamseteZeta),
+      new SimpleMotorFeedforward(DriveConstants.ksVolts, DriveConstants.kvVoltSecondsPerMeter, DriveConstants.kaVoltSecondsSquaredPerMeter),
+      DriveConstants.kDriveKinematics,
+      m_drivetrain::getWheelSpeeds,
+      new PIDController(DriveConstants.kPDriveVel, 0, 0),
+      new PIDController(DriveConstants.kPDriveVel, 0, 0),
+      m_drivetrain::tankDriveVolts,
+      m_drivetrain);    
     //m_drivetrain.resetOdometry(exampleTrajectory.getInitialPose());
     m_drivetrain.resetOdometry(exampleTrajectory.getInitialPose());
 
@@ -142,12 +153,13 @@ public class RobotContainer {
     return new InstantCommand(() -> m_drivetrain.resetOdometry(exampleTrajectory.getInitialPose()), m_drivetrain)
         // next, we run the actual ramsete command
         .andThen(ramseteCommand)
+        .andThen(ramseteCommand2)
 
         // Finally, we make sure that the robot stops
         .andThen(new InstantCommand(() -> m_drivetrain.tankDriveVolts(0, 0), m_drivetrain));
   } 
 
-  private Trajectory pathtraj (){
+  private Trajectory pathtraj(){
     String trajectoryJSON = "paths/test1.wpilib.json";
     Trajectory trajectory = new Trajectory();
 
@@ -161,6 +173,19 @@ public class RobotContainer {
     
   }
 
+  private Trajectory pathtraj2(){
+    String trajectoryJSON = "paths/test2.wpilib.json";
+    Trajectory trajectory = new Trajectory();
+
+    try {
+      Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
+      trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+   } catch (IOException ex) {
+      new PrintCommand("Unable to open trajectory: " ); //+ trajectoryJSON, ex.getStackTrace()
+   }
+   return trajectory;
+    
+  }
   /**
    * Use this method to define your button->command mappings. Buttons can be created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
