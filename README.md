@@ -1,8 +1,8 @@
-# Color Conundrum 2021 Romi
+# Frantic Fetch 2021 Romi
 
 
 ## Description
-This is the code we used for the NE First Color Conundrum challenge.
+This is the code we used for the NE First Frantic Fetch challenge.
 
 This Repository is a modified version of the incredible work that @zhiquanyeo created to help us all learn how to use trajectories. Without him, we would be at a bit of a loss. You can access his repository [directly](https://github.com/bb-frc-workshops/romi-examples).
 
