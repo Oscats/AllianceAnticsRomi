@@ -31,10 +31,17 @@ We have created a few handy convenience features that allow you to easily input 
     - Start PoseX, Start PoseY, Start PoseAngle(in degrees) -- Makes up the start pose.
     - Waypoint(*) -- Makes up the waypoint. If left as the default x, coordinate, this does nothing, but if you change it, it will add the new coordinate to the trajectory. They go in order. So, in theory, the first point will be the first, and so on.
     - End PoseX, End PoseY, End Pose Angle (in degrees) -- Makes up the ending pose.
-
-    Hi
+    **PathWeaver Note: Put waypoint in middle of line if it turns too much.**
+## Characterization
+    **The Characterization for the Romi has a few steps.**
+    - If you have good data, you do not need to rerun the characterization.
+    You can just plug the inputs into our Constants file using the letters (Ks, Ka, Kv, etc).
+    - If you need to characterize...
+        - Follow the insructions [here] (https://docs.wpilib.org/en/stable/docs/software/wpilib-tools/robot-characterization/introduction.html?highlight=characterization#installing-and-launching-the-toolsuite) to install and run the characterization tool.
+        - Rather than letting the tool create the project, use the one [ZQ created](https://github.com/bb-frc-workshops/romi-examples/tree/main/romi-characterization).
+        - Then run the analyzer making the recommended adjustments in the readme.
+        Hi
     fish
     :)
     crabss
 
-    PathWeaver Note: Put waypoint in middle of line if it turns too much.
