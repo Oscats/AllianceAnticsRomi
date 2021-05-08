@@ -4,8 +4,11 @@
 
 package frc.robot;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
@@ -20,6 +23,7 @@ import frc.robot.commands.ArcadeDrive;
 import frc.robot.commands.FindNewTrajectoryRuntime;
 import frc.robot.commands.PlotTrajectory;
 import frc.robot.commands.FindRuntimeTrajectoryManyPoints;
+import frc.robot.commands.PlotPathweaver;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.OnBoardIO;
 import frc.robot.subsystems.OnBoardIO.ChannelMode;
@@ -28,6 +32,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
+import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
 import edu.wpi.first.wpilibj.trajectory.constraint.DifferentialDriveVoltageConstraint;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -60,8 +65,7 @@ public class RobotContainer {
 
    private double[] defaultCoordinates = {0.0, 5.0};
    private double[] defaultPoseCoordinates = {0,0,180};
-   
- 
+  
    // NOTE: The I/O pin functionality of the 5 exposed I/O pins depends on the hardware "overlay"
    // that is specified when launching the wpilib-ws server on the Romi raspberry pi.
    // By default, the following are available (listed in order from inside of the board to outside):
@@ -117,7 +121,7 @@ public class RobotContainer {
         config);
 
     RamseteCommand ramseteCommand = new RamseteCommand(
-        exampleTrajectory,
+        pathtraj(),
         m_drivetrain::getPose,
         new RamseteController(AutoConstants.kRamseteB, AutoConstants.kRamseteZeta),
         new SimpleMotorFeedforward(DriveConstants.ksVolts, DriveConstants.kvVoltSecondsPerMeter, DriveConstants.kaVoltSecondsSquaredPerMeter),
@@ -127,7 +131,42 @@ public class RobotContainer {
         new PIDController(DriveConstants.kPDriveVel, 0, 0),
         m_drivetrain::tankDriveVolts,
         m_drivetrain);
+    
+    RamseteCommand ramseteCommand2 = new RamseteCommand(
+      pathtraj2(),
+      m_drivetrain::getPose,
+      new RamseteController(AutoConstants.kRamseteB, AutoConstants.kRamseteZeta),
+      new SimpleMotorFeedforward(DriveConstants.ksVolts, DriveConstants.kvVoltSecondsPerMeter, DriveConstants.kaVoltSecondsSquaredPerMeter),
+      DriveConstants.kDriveKinematics,
+      m_drivetrain::getWheelSpeeds,
+      new PIDController(DriveConstants.kPDriveVel, 0, 0),
+      new PIDController(DriveConstants.kPDriveVel, 0, 0),
+      m_drivetrain::tankDriveVolts,
+      m_drivetrain);  
 
+    RamseteCommand ramseteCommand3 = new RamseteCommand(
+      pathtraj3(),
+      m_drivetrain::getPose,
+      new RamseteController(AutoConstants.kRamseteB, AutoConstants.kRamseteZeta),
+      new SimpleMotorFeedforward(DriveConstants.ksVolts, DriveConstants.kvVoltSecondsPerMeter, DriveConstants.kaVoltSecondsSquaredPerMeter),
+      DriveConstants.kDriveKinematics,
+      m_drivetrain::getWheelSpeeds,
+      new PIDController(DriveConstants.kPDriveVel, 0, 0),
+      new PIDController(DriveConstants.kPDriveVel, 0, 0),
+      m_drivetrain::tankDriveVolts,
+      m_drivetrain); 
+
+    RamseteCommand ramseteCommand4 = new RamseteCommand(
+      pathtraj4(),
+      m_drivetrain::getPose,
+      new RamseteController(AutoConstants.kRamseteB, AutoConstants.kRamseteZeta),
+      new SimpleMotorFeedforward(DriveConstants.ksVolts, DriveConstants.kvVoltSecondsPerMeter, DriveConstants.kaVoltSecondsSquaredPerMeter),
+      DriveConstants.kDriveKinematics,
+      m_drivetrain::getWheelSpeeds,
+      new PIDController(DriveConstants.kPDriveVel, 0, 0),
+      new PIDController(DriveConstants.kPDriveVel, 0, 0),
+      m_drivetrain::tankDriveVolts,
+      m_drivetrain); 
     //m_drivetrain.resetOdometry(exampleTrajectory.getInitialPose());
     m_drivetrain.resetOdometry(exampleTrajectory.getInitialPose());
 
@@ -137,11 +176,70 @@ public class RobotContainer {
     return new InstantCommand(() -> m_drivetrain.resetOdometry(exampleTrajectory.getInitialPose()), m_drivetrain)
         // next, we run the actual ramsete command
         .andThen(ramseteCommand)
+        .andThen(new InstantCommand(() -> m_drivetrain.tankDriveVolts(0, 0), m_drivetrain))
+        .andThen(ramseteCommand2)
+        .andThen(new InstantCommand(() -> m_drivetrain.tankDriveVolts(0, 0), m_drivetrain))
+        .andThen(ramseteCommand3)
+        .andThen(new InstantCommand(() -> m_drivetrain.tankDriveVolts(0, 0), m_drivetrain))
+        .andThen(ramseteCommand4)
 
         // Finally, we make sure that the robot stops
         .andThen(new InstantCommand(() -> m_drivetrain.tankDriveVolts(0, 0), m_drivetrain));
   } 
 
+  private Trajectory pathtraj(){
+    String trajectoryJSON = "paths/test1.wpilib.json";
+    Trajectory trajectory = new Trajectory();
+
+    try {
+      Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
+      trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+   } catch (IOException ex) {
+      new PrintCommand("Unable to open trajectory: " ); //+ trajectoryJSON, ex.getStackTrace()
+   }
+   return trajectory;
+    
+  }
+
+  private Trajectory pathtraj2(){
+    String trajectoryJSON = "paths/test2.wpilib.json";
+    Trajectory trajectory = new Trajectory();
+
+    try {
+      Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
+      trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+   } catch (IOException ex) {
+      new PrintCommand("Unable to open trajectory: " ); //+ trajectoryJSON, ex.getStackTrace()
+   }
+   return trajectory;
+    
+  }
+  private Trajectory pathtraj3(){
+    String trajectoryJSON = "paths/test3.wpilib.json";
+    Trajectory trajectory = new Trajectory();
+
+    try {
+      Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
+      trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+   } catch (IOException ex) {
+      new PrintCommand("Unable to open trajectory: " ); //+ trajectoryJSON, ex.getStackTrace()
+   }
+   return trajectory;
+    
+  }
+  private Trajectory pathtraj4(){
+    String trajectoryJSON = "paths/test4.wpilib.json";
+    Trajectory trajectory = new Trajectory();
+
+    try {
+      Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
+      trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+   } catch (IOException ex) {
+      new PrintCommand("Unable to open trajectory: " ); //+ trajectoryJSON, ex.getStackTrace()
+   }
+   return trajectory;
+    
+  }
   /**
    * Use this method to define your button->command mappings. Buttons can be created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
@@ -162,6 +260,7 @@ public class RobotContainer {
 
     // Setup SmartDashboard options
     m_chooser.setDefaultOption("Ramsete Trajectory", generateRamseteCommand(m_waypoints));
+    m_chooser.addOption("Plot Pathweaver",new PlotPathweaver(pathtraj(), m_drivetrain,m_waypoints));
     m_chooser.addOption("Plot Points",new PlotTrajectory(exampleTrajectory, m_drivetrain,m_waypoints));
     m_chooser.addOption("Plot Points at Runtime",new FindNewTrajectoryRuntime(exampleTrajectory, m_drivetrain, m_waypoints));
     m_chooser.addOption("Plot Many Points at Runtime", new FindRuntimeTrajectoryManyPoints(exampleTrajectory, m_drivetrain, m_waypoints));
