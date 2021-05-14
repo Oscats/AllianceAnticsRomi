@@ -24,6 +24,7 @@ import frc.robot.commands.FindNewTrajectoryRuntime;
 import frc.robot.commands.PlotTrajectory;
 import frc.robot.commands.FindRuntimeTrajectoryManyPoints;
 import frc.robot.commands.PlotPathweaver;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.OnBoardIO;
 import frc.robot.subsystems.OnBoardIO.ChannelMode;
@@ -39,6 +40,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.button.Button;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -49,6 +51,7 @@ import edu.wpi.first.wpilibj2.command.button.Button;
 public class RobotContainer {
    // The robot's subsystems and commands are defined here...
    private final Drivetrain m_drivetrain = new Drivetrain();
+   private final Intake m_intake = new Intake();
    private final OnBoardIO m_onboardIO = new OnBoardIO(ChannelMode.INPUT, ChannelMode.INPUT);
  
    // Assumes a gamepad plugged into channnel 0
@@ -252,11 +255,14 @@ public class RobotContainer {
     // is scheduled over it.
     m_drivetrain.setDefaultCommand(getArcadeDriveCommand());
 
-    // Example of how to use the onboard IO
-    Button onboardButtonA = new Button(m_onboardIO::getButtonAPressed);
-    onboardButtonA
-        .whenActive(new PrintCommand("Button A Pressed"))
-        .whenInactive(new PrintCommand("Button A Released"));
+    // Creates the button that runs the Intake
+    JoystickButton intakeButton = new JoystickButton(m_controller, 2);
+    JoystickButton releaseButton = new JoystickButton(m_controller, 3);
+    JoystickButton stopButton = new JoystickButton(m_controller, 1);
+    // Binds an ExampleCommand to be scheduled when the trigger of the example joystick is pressed
+  intakeButton.whenPressed(runIntake(0.5));
+  releaseButton.whenPressed(runIntake(-0.5));
+  stopButton.whenPressed(runIntake(0));
 
     // Setup SmartDashboard options
     m_chooser.setDefaultOption("Ramsete Trajectory", generateRamseteCommand(m_waypoints));
@@ -318,6 +324,10 @@ public class RobotContainer {
   public Command getArcadeDriveCommand() {
     return new ArcadeDrive(
         m_drivetrain, () -> -(m_controller.getRawAxis(1))/1.5, () -> (m_controller.getRawAxis(0))/1.5);
+  }
+  public Command runIntake(double power){
+    
+    return new InstantCommand(()->m_intake.runIntake(power));
   }
 }
 
