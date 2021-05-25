@@ -26,8 +26,6 @@ import frc.robot.commands.FindRuntimeTrajectoryManyPoints;
 import frc.robot.commands.PlotPathweaver;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Drivetrain;
-import frc.robot.subsystems.OnBoardIO;
-import frc.robot.subsystems.OnBoardIO.ChannelMode;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
@@ -39,7 +37,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
-import edu.wpi.first.wpilibj2.command.button.Button;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 /**
@@ -52,11 +49,10 @@ public class RobotContainer {
    // The robot's subsystems and commands are defined here...
    private final Drivetrain m_drivetrain = new Drivetrain();
    private final Intake m_intake = new Intake();
-   private final OnBoardIO m_onboardIO = new OnBoardIO(ChannelMode.INPUT, ChannelMode.INPUT);
- 
+  
    // Assumes a gamepad plugged into channnel 0
    private final Joystick m_controller = new Joystick(0);
- 
+
    // Create SmartDashboard chooser for autonomous routines
    private final SendableChooser<Command> m_chooser = new SendableChooser<>();
  
@@ -263,6 +259,7 @@ public class RobotContainer {
   intakeButton.whenPressed(runIntake(0.5));
   releaseButton.whenPressed(runIntake(-0.5));
   stopButton.whenPressed(runIntake(0));
+  
 
     // Setup SmartDashboard options
     m_chooser.setDefaultOption("Ramsete Trajectory", generateRamseteCommand(m_waypoints));
@@ -326,8 +323,15 @@ public class RobotContainer {
         m_drivetrain, () -> -(m_controller.getRawAxis(1))/1.5, () -> (m_controller.getRawAxis(0))/1.5);
   }
   public Command runIntake(double power){
+    Command intakeCommand;
     
-    return new InstantCommand(()->m_intake.runIntake(power));
+    if (power == 0) {
+      intakeCommand = new InstantCommand(()->m_intake.runIntake(0));
+    } else {
+      intakeCommand = new InstantCommand(()->m_intake.runIntake(power));
+    }
+    
+    return intakeCommand;
   }
 }
 
