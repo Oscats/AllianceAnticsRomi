@@ -252,9 +252,9 @@ public class RobotContainer {
     m_drivetrain.setDefaultCommand(getArcadeDriveCommand());
 
     // Creates the button that runs the Intake
-    JoystickButton intakeButton = new JoystickButton(m_controller, 2);
-    JoystickButton releaseButton = new JoystickButton(m_controller, 3);
-    JoystickButton stopButton = new JoystickButton(m_controller, 1);
+    JoystickButton intakeButton = new JoystickButton(m_controller, 1);
+    JoystickButton releaseButton = new JoystickButton(m_controller, 4);
+    JoystickButton stopButton = new JoystickButton(m_controller, 2);
     // Binds an ExampleCommand to be scheduled when the trigger of the example joystick is pressed
   intakeButton.whenPressed(runIntake(0.5));
   releaseButton.whenPressed(runIntake(-0.5));
