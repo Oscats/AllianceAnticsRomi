@@ -307,6 +307,7 @@ RamseteController disabledRamsete = new RamseteController() {
     m_verifyFeedleftController,
     m_verifyFeedrightController,
     // RamseteCommand passes volts to the callback
+    //We could add this logging to our actual ramsete. That may help us troubleshoot as well.
     (leftVolts, rightVolts) -> {
         m_drivetrain.tankDriveVolts(leftVolts, rightVolts);
         table = NetworkTableInstance.getDefault().getTable("troubleshooting");
@@ -321,12 +322,12 @@ RamseteController disabledRamsete = new RamseteController() {
         rightReference.setNumber(m_verifyFeedrightController.getSetpoint());
     },
     m_drivetrain
-);
-return new InstantCommand(
-  ()-> m_drivetrain.resetOdometry(exampleTrajectory.getInitialPose()), m_drivetrain)
-  .andThen(feedcontrollerRamseteCommand)
-// Finally, we make sure that the robot stops
-.andThen(new InstantCommand(() -> m_drivetrain.tankDriveVolts(0, 0), m_drivetrain));
+    );
+    return new InstantCommand(
+      ()-> m_drivetrain.resetOdometry(exampleTrajectory.getInitialPose()), m_drivetrain)
+      .andThen(feedcontrollerRamseteCommand)
+    // Finally, we make sure that the robot stops
+    .andThen(new InstantCommand(() -> m_drivetrain.tankDriveVolts(0, 0), m_drivetrain));
   }
   /**
    * Use this method to define your button->command mappings. Buttons can be created by
