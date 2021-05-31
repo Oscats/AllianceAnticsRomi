@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
@@ -17,6 +19,7 @@ import edu.wpi.first.wpilibj.controller.RamseteController;
 import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
+import edu.wpi.first.wpilibj.kinematics.ChassisSpeeds;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.commands.ArcadeDrive;
@@ -45,7 +48,9 @@ import edu.wpi.first.wpilibj2.command.button.Button;
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and button mappings) should be declared here.
+ * 
  */
+
 public class RobotContainer {
    // The robot's subsystems and commands are defined here...
    private final Drivetrain m_drivetrain = new Drivetrain();
@@ -65,6 +70,11 @@ public class RobotContainer {
 
    private double[] defaultCoordinates = {0.0, 5.0};
    private double[] defaultPoseCoordinates = {0,0,180};
+
+    PIDController m_verifyFeedleftController = new PIDController(Constants.DriveConstants.kPDriveVel, 0, 0);
+    PIDController m_verifyFeedrightController = new PIDController(Constants.DriveConstants.kPDriveVel, 0, 0);
+    NetworkTable table;
+   
   
    // NOTE: The I/O pin functionality of the 5 exposed I/O pins depends on the hardware "overlay"
    // that is specified when launching the wpilib-ws server on the Romi raspberry pi.
@@ -79,6 +89,8 @@ public class RobotContainer {
  
    /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+
+  
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -240,6 +252,82 @@ public class RobotContainer {
    return trajectory;
     
   }
+  //Some troubleshooting classes that we can run with the auto selector...
+  //Let's create a disabled Ramsete
+
+  private Command generateVerifyFeedForwardCommand(Waypoints m_waypoints){
+
+    
+      List<Pose2d> m_pose = m_waypoints.getPathAPoses();
+      List<Translation2d>m_list = m_waypoints.getPathAWaypoints();
+      var autoVoltageConstraint =
+          new DifferentialDriveVoltageConstraint(
+              new SimpleMotorFeedforward(DriveConstants.ksVolts, 
+                                         DriveConstants.kvVoltSecondsPerMeter, 
+                                         DriveConstants.kaVoltSecondsSquaredPerMeter),
+              DriveConstants.kDriveKinematics,
+              10);
+  
+      TrajectoryConfig config =
+          new TrajectoryConfig(AutoConstants.kMaxSpeedMetersPerSecond, 
+                               AutoConstants.kMaxAccelerationMetersPerSecondSquared)
+              .setKinematics(DriveConstants.kDriveKinematics)
+              .addConstraint(autoVoltageConstraint);
+  
+      // This trajectory can be modified to suit your purposes
+      // Note that all coordinates are in meters, and follow NWU conventions.
+      // If you would like to specify coordinates in inches (which might be easier
+      // to deal with for the Romi), you can use the Units.inchesToMeters() method
+      Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
+          // Start at the origin facing the +X direction
+          m_pose.get(0),
+          m_list,
+          m_pose.get(1),
+          config);
+
+
+RamseteController disabledRamsete = new RamseteController() {
+  @Override
+  public ChassisSpeeds calculate(Pose2d currentPose, Pose2d poseRef, double linearVelocityRefMeters,
+          double angularVelocityRefRadiansPerSecond) {
+      return new ChassisSpeeds(linearVelocityRefMeters, 0.0, angularVelocityRefRadiansPerSecond);
+  }
+};
+
+
+
+
+  RamseteCommand feedcontrollerRamseteCommand = new RamseteCommand(
+    exampleTrajectory,
+    m_drivetrain::getPose,
+    disabledRamsete, // Pass in disabledRamsete here
+    new SimpleMotorFeedforward(DriveConstants.ksVolts, DriveConstants.kvVoltSecondsPerMeter, DriveConstants.kaVoltSecondsSquaredPerMeter),
+    DriveConstants.kDriveKinematics,
+    m_drivetrain::getWheelSpeeds,
+    m_verifyFeedleftController,
+    m_verifyFeedrightController,
+    // RamseteCommand passes volts to the callback
+    (leftVolts, rightVolts) -> {
+        m_drivetrain.tankDriveVolts(leftVolts, rightVolts);
+        table = NetworkTableInstance.getDefault().getTable("troubleshooting");
+        var leftReference = table.getEntry("left_reference");
+        var leftMeasurement = table.getEntry("left_measurement");
+        var rightReference = table.getEntry("right_reference");
+        var rightMeasurement = table.getEntry("right_measurement");
+        leftMeasurement.setNumber(m_drivetrain.getWheelSpeeds().leftMetersPerSecond);
+        leftReference.setNumber(m_verifyFeedleftController.getSetpoint());
+
+        rightMeasurement.setNumber(m_drivetrain.getWheelSpeeds().rightMetersPerSecond);
+        rightReference.setNumber(m_verifyFeedrightController.getSetpoint());
+    },
+    m_drivetrain
+);
+return new InstantCommand(
+  ()-> m_drivetrain.resetOdometry(exampleTrajectory.getInitialPose()), m_drivetrain)
+  .andThen(feedcontrollerRamseteCommand)
+// Finally, we make sure that the robot stops
+.andThen(new InstantCommand(() -> m_drivetrain.tankDriveVolts(0, 0), m_drivetrain));
+  }
   /**
    * Use this method to define your button->command mappings. Buttons can be created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
@@ -264,6 +352,7 @@ public class RobotContainer {
     m_chooser.addOption("Plot Points",new PlotTrajectory(exampleTrajectory, m_drivetrain,m_waypoints));
     m_chooser.addOption("Plot Points at Runtime",new FindNewTrajectoryRuntime(exampleTrajectory, m_drivetrain, m_waypoints));
     m_chooser.addOption("Plot Many Points at Runtime", new FindRuntimeTrajectoryManyPoints(exampleTrajectory, m_drivetrain, m_waypoints));
+    m_chooser.addOption("Verify Feedforward", generateVerifyFeedForwardCommand(m_waypoints));
     //Setup starting pose entry for runtime trajectory...
     SmartDashboard.putNumber("Start PoseX", 0);
     SmartDashboard.putNumber("Start PoseY", 0);

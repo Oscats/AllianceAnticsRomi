@@ -1,4 +1,12 @@
-# Color Conundrum 2021 Romi
+# Tune Trajectory
+This branch is to help us tune our trajectory. I am adding some of the framework to speed up our meeitngs. This is for us to use the following troublelshooting techniques found on the WPILib Docs page](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/trajectories/troubleshooting.html).
+
+Steps...
+*[Verify Odometry](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/trajectories/troubleshooting.html#verify-odometry)
+*[Verify Feedforward](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/trajectories/troubleshooting.html#verify-feedforward)
+*[Verify P Gain](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/trajectories/troubleshooting.html#verify-p-gain)
+*[Check Trajectory Waypoints](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/trajectories/troubleshooting.html#check-trajectory-waypoints)
+
 
 
 ## Description
