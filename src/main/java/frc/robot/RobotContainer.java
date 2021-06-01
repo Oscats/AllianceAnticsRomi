@@ -320,7 +320,7 @@ public class RobotContainer {
    */
   public Command getArcadeDriveCommand() {
     return new ArcadeDrive(
-        m_drivetrain, () -> -(m_controller.getRawAxis(1))/1.5, () -> (m_controller.getRawAxis(0))/1.5);
+        m_drivetrain, () -> -(m_controller.getRawAxis(1))*(m_controller.getRawAxis(2) + 0.63), () -> (m_controller.getRawAxis(0))*(m_controller.getRawAxis(2) + 0.63));
   }
   public Command runIntake(double power){
     Command intakeCommand;
